@@ -1,13 +1,15 @@
 import { NgTemplateOutlet } from '@angular/common';
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, linkedSignal, signal } from '@angular/core';
 import { formatDate, timeAgo, today, topCategories } from './format';
 import { NewsService } from './news.service';
+import { Pager } from './pager';
+import { pageCount, PagerLabels } from './paging';
 import { Thumb } from './thumb';
 import { Source } from './types';
 
 @Component({
   selector: 'app-root',
-  imports: [Thumb, NgTemplateOutlet],
+  imports: [Thumb, NgTemplateOutlet, Pager],
   templateUrl: './app.html',
 })
 export class App {
@@ -35,6 +37,20 @@ export class App {
   // The most recent article with an image is the featured story ("Hovedsak").
   protected readonly hero = computed(() => this.items().find((i) => i.image) ?? this.items()[0]);
   protected readonly rest = computed(() => this.items().filter((i) => i !== this.hero()));
+
+  // Paging: 12 articles per page after the featured one; back to page 1 when a filter or the search changes.
+  protected readonly labels: PagerLabels = { prev: '‹ Forrige', next: 'Neste ›', nav: 'Sidenavigasjon', num: (n: number) => String(n) };
+  protected readonly page = linkedSignal(() => { this.source(); this.category(); this.query(); return 1; });
+  protected readonly pages = computed(() => pageCount(this.rest().length, 12));
+  protected readonly pageItems = computed(() => {
+    const page = Math.min(this.page(), this.pages());
+    return this.rest().slice((page - 1) * 12, page * 12);
+  });
+
+  protected goTo(page: number): void {
+    this.page.set(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
 
   protected sourceOf(id: string): Source | undefined {
     return this.sources().get(id);

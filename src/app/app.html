@@ -57,7 +57,7 @@
     </p>
   }
 
-  @if (hero(); as h) {
+  @if (page() === 1 && hero(); as h) {
     <a class="hero" [href]="h.link" target="_blank" rel="noopener noreferrer">
       <app-thumb [src]="h.image" [source]="sourceOf(h.source)" />
       <div>
@@ -72,7 +72,7 @@
   }
 
   <section class="grid">
-    @for (item of rest(); track item.link) {
+    @for (item of pageItems(); track item.link) {
       <a class="story" [href]="item.link" target="_blank" rel="noopener noreferrer">
         <div class="media"><app-thumb [src]="item.image" [source]="sourceOf(item.source)" /></div>
         <div>
@@ -85,6 +85,11 @@
       </a>
     }
   </section>
+
+  <app-pager [page]="page()" [total]="pages()" [labels]="labels" (pageChange)="goTo($event)" />
+  @if (pages() > 1) {
+    <p class="pager-info">{{ 'Side ' + page() + ' av ' + pages() }}</p>
+  }
 
   @if (news.feed() && items().length === 0) {
     <p class="empty">Ingen artikler samsvarer med søket ditt.</p>
